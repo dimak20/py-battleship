@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+from typing import Tuple, List
+
+
 class Deck:
     def __init__(
             self,
@@ -29,37 +34,34 @@ class Ship:
             column: int
     ) -> Deck | None:
         for deck in self.decks:
-            if deck.row == row:
-                if deck.column == column:
-                    return deck
+            if deck.row == row and deck.column == column:
+                return deck
         return None
 
     def fire(
             self,
             row: int,
             column: int
-    ) -> int:
+    ) -> Ship | None:
         got_deck = self.get_deck(row, column)
-        if got_deck is None or not got_deck.is_alive:
-            return 1
-        got_deck.is_alive = False
-        if all(not deck.is_alive for deck in self.decks):
-            self.is_drowned = True
-            return 3
-        return 2
+        if got_deck and got_deck.is_alive:
+            got_deck.is_alive = False
+            if all(not deck.is_alive for deck in self.decks):
+                self.is_drowned = True
+            return self
 
 
 class Battleship:
-    def __init__(self, ships: list) -> None:
+    def __init__(self, ships: List[tuple]) -> None:
         self.field = {
-            ship: Ship(ship[0], ship[1]) for ship in ships
+            ship: Ship(*ship) for ship in ships
         }
 
-    def fire(self, location: tuple) -> str:
-        for ship in self.field:
-            attempt = self.field[ship].fire(location[0], location[1])
-            if attempt >= 2:
-                if attempt == 3:
+    def fire(self, location: Tuple[int, int]) -> str:
+        for ship_cord in self.field:
+            ship = self.field[ship_cord].fire(*location)
+            if ship:
+                if ship.is_drowned:
                     return "Sunk!"
                 return "Hit!"
         return "Miss!"
